@@ -290,8 +290,10 @@ class ServiceKind(ObjectKind):
         metadata = self.object.get('metadata', None)
         resource_name = metadata.get('name') if metadata else None
         resource_namespace = metadata.get('namespace', 'default') if metadata else None
-        annotations = metadata.get('annotations', None) if metadata else None
         service_info['name'] = resource_name
+        annotations = metadata.get('annotations', None) if metadata else None
+        if annotations:
+            annotations = annotations.get('getambassador.io/config', None)
 
         skip = False
 
@@ -319,9 +321,7 @@ class ServiceKind(ObjectKind):
         # This resource identifier is useful for log output since filenames can be duplicated (multiple subdirectories)
         resource_identifier = '{name}.{namespace}'.format(namespace=resource_namespace, name=resource_name)
 
-        annotations = annotations.get('getambassador.io/config', None)
-
-        if not self.filename.endswith(":annotation"):
+        if (self.filename is not None) and (not self.filename.endswith(":annotation")):
             self.filename += ":annotation"
 
         objects = []

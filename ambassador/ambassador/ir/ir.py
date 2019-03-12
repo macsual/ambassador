@@ -274,7 +274,7 @@ class IR:
         return self.add_to_listener(primary_listener, **kwargs)
 
     def add_mapping(self, aconf: Config, mapping: IRBaseMapping) -> Optional[IRBaseMappingGroup]:
-        group: IRBaseMappingGroup
+        group: IRBaseMappingGroup = None
 
         if mapping.is_active():
             if mapping.group_id not in self.groups:
