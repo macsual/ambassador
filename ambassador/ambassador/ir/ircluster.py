@@ -66,6 +66,7 @@ class IRCluster (IRResource):
                  lb_type: str="round_robin",
                  grpc: Optional[bool] = False,
                  allow_scheme: Optional[bool] = True,
+                 load_balancer: Optional[dict] = None,
 
                  cb_name: Optional[str]=None,
                  od_name: Optional[str]=None,
@@ -195,8 +196,18 @@ class IRCluster (IRResource):
         # TLS. Kind of odd, but there we go.)
         url = "tcp://%s:%d" % (hostname, port)
 
-        self.logger.debug("fetching endpoint information for {}".format(hostname))
-        endpoint = self.get_endpoint(hostname, port, ir.service_info.get(service, None), ir.endpoints.get(hostname, None))
+        if load_balancer is None:
+            global_load_balancer = ir.ambassador_module.get('load_balancer', None)
+            if global_load_balancer is None:
+                self.post_error(RichStatus.fromError("no global load_balancer found in ambassador module"))
+            load_balancer = global_load_balancer
+
+        self.logger.info("Load balancer for {} is {}".format(url, load_balancer))
+
+        endpoint = {}
+        if self.endpoints_required(load_balancer):
+            self.logger.debug("fetching endpoint information for {}".format(hostname))
+            endpoint = self.get_endpoint(hostname, port, ir.service_info.get(service, None), ir.endpoints.get(hostname, None))
 
         # OK. Build our default args.
         #
@@ -215,6 +226,7 @@ class IRCluster (IRResource):
             "lb_type": lb_type,
             "urls": [ url ],
             "endpoint": endpoint,
+            "load_balancer": load_balancer,
             "service": service,
             'enable_ipv4': enable_ipv4,
             'enable_ipv6': enable_ipv6
@@ -244,6 +256,16 @@ class IRCluster (IRResource):
         if errors:
             for error in errors:
                 ir.post_error(error, resource=self)
+
+    def endpoints_required(self, load_balancer) -> bool:
+        required = False
+        lb_type = load_balancer.get('type')
+        if lb_type == 'envoy':
+            lb_policy = load_balancer.get('policy')
+            if lb_policy == 'round_robin':
+                self.logger.debug("Endpoints are required for {} load balancer with policy {}".format(lb_type, lb_policy))
+                required = True
+        return required
 
     def get_endpoint(self, hostname, port, service_info, endpoint):
         if endpoint is None:
