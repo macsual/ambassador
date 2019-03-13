@@ -13,7 +13,7 @@ The `load_balancer` attribute configures the load balancing. The following field
 - `policy`: Specifies the load balancing policy to use.
 
 ### `type: kubernetes`
-The `kubernetes` type delegates load balancing to Kubernetes. Supported policies:
+The `kubernetes` type delegates load balancing to Kubernetes. Ambassador will route traffic directly to a Kubernetes service and [Kubernetes service networking](https://kubernetes.io/docs/concepts/services-networking/) is then responsible for load balancing traffic between pods. Supported policies:
 - `round_robin` (default)
 
 ### `type: envoy`
