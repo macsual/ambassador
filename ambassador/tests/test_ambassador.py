@@ -1251,14 +1251,11 @@ service: http://{self.target.path.fqdn}
         assert 0 < self.results[-1].json[0]['datapoints'][0][0] <= 1000
 
 
-class LoadBalancerTest(MappingTest):
+class LoadBalancerTest(AmbassadorTest):
+    target: ServiceType
 
-    parent: AmbassadorTest
-
-    @classmethod
-    def variants(cls):
-        for st in variants(ServiceType):
-            yield cls(st, name="{self.target.name}")
+    def init(self):
+        self.target = HTTP()
 
     def config(self):
         yield self, self.format("""
@@ -1310,10 +1307,10 @@ load_balancer:
 """)
 
     def queries(self):
-        yield Query(self.parent.url(self.name + "-1/"))
-        yield Query(self.parent.url(self.name + "-2/"))
-        yield Query(self.parent.url(self.name + "-3/"), expected=404)
-        yield Query(self.parent.url(self.name + "-4/"), expected=404)
+        yield Query(self.url(self.name + "-1/"))
+        yield Query(self.url(self.name + "-2/"))
+        yield Query(self.url(self.name + "-3/"), expected=404)
+        yield Query(self.url(self.name + "-4/"), expected=404)
 
 
 # pytest will find this because Runner is a toplevel callable object in a file
