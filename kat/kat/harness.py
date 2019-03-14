@@ -939,10 +939,6 @@ class Runner:
 
         for node, name in requirements:
             if not pods.get(name, False):
-                print("logs from pod {}:".format(name))
-                run("kubectl logs {} | tail -n 20".format(name))
-                print("more info for pod {}".format(name))
-                run("kubectl describe pod {}".format(name))
                 not_ready.append(name)
 
         if not_ready:
