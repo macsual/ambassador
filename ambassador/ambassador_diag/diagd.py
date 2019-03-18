@@ -531,7 +531,11 @@ class AmbassadorEventWatcher(threading.Thread):
 
         self.events.put((cmd, arg, rqueue))
 
-        return rqueue.get()
+        try:
+            return rqueue.get(block=False)
+        except queue.Empty as e:
+            self.logger.info("queue is empty {}".format(e))
+            return 200, "empty queue"
 
     def update_estats(self) -> None:
         self.post('ESTATS', '')
